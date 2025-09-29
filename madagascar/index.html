@@ -1,0 +1,1124 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Madagascar Químico - Jogo Educativo Completo</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    background: #f0f8ff;
+    margin: 0; padding: 20px;
+    display: flex; flex-direction: column; align-items: center;
+    min-height: 100vh;
+  }
+  header {
+    background: #ffcc00;
+    width: 100%;
+    padding: 20px;
+    text-align: center;
+    font-size: 2rem;
+    font-weight: bold;
+    color: #333;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    margin-bottom: 20px;
+  }
+  #game {
+    max-width: 800px;
+    width: 95%;
+    background: white;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+  }
+  #character-img {
+    width: 150px;
+    height: 150px;
+    object-fit: contain;
+    margin: 0 auto 20px;
+    display: block;
+  }
+  #mission-title {
+    font-size: 1.5rem;
+    font-weight: bold;
+    margin-bottom: 10px;
+    text-align: center;
+  }
+  #question {
+    font-size: 1.2rem;
+    margin-bottom: 15px;
+  }
+  .answer-btn {
+    display: block;
+    width: 100%;
+    margin: 8px 0;
+    padding: 12px;
+    font-size: 1rem;
+    border: 2px solid #ffcc00;
+    border-radius: 8px;
+    background: #fff8dc;
+    cursor: pointer;
+    transition: background 0.3s;
+  }
+  .answer-btn:hover {
+    background: #ffeb99;
+  }
+  .correct {
+    background: #a6e6a1 !important;
+    border-color: #4caf50 !important;
+    color: #2e7d32;
+  }
+  .wrong {
+    background: #f7a6a6 !important;
+    border-color: #d32f2f !important;
+    color: #b71c1c;
+  }
+  #feedback {
+    margin-top: 15px;
+    font-style: italic;
+    font-size: 1rem;
+    min-height: 50px;
+  }
+  #score {
+    font-weight: bold;
+    margin-top: 10px;
+    text-align: center;
+  }
+  #start-btn, #next-btn {
+    margin-top: 20px;
+    padding: 12px 25px;
+    font-size: 1.1rem;
+    background: #ffcc00;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: bold;
+    box-shadow: 0 3px 6px rgba(0,0,0,0.2);
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  #start-btn:hover, #next-btn:hover {
+    background: #e6b800;
+  }
+  #image-question {
+    max-width: 100%;
+    max-height: 250px;
+    margin: 15px auto;
+    display: block;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  }
+</style>
+</head>
+<body>
+
+<header>Madagascar Químico - Jogo Educativo Completo</header>
+
+<div id="game">
+  <img id="character-img" src="" alt="Personagem Madagascar" />
+  <div id="mission-title"></div>
+  <div id="question"></div>
+  <img id="image-question" src="" alt="" style="display:none;" />
+  <div id="answers"></div>
+  <div id="feedback"></div>
+  <button id="start-btn">Começar Jogo</button>
+  <button id="next-btn" style="display:none;">Próxima</button>
+  <div id="score"></div>
+</div>
+
+<script>
+  // (Opcional) URLs de personagens — você pode alterar para imagens válidas
+  const characters = {
+    alex: 'https://i.imgur.com/6Xq6Q6B.png',
+    marty: 'https://i.imgur.com/7Q6Xq6B.png',
+    melman: 'https://i.imgur.com/8Xq6Q6B.png',
+    gloria: 'https://i.imgur.com/9Xq6Q6B.png',
+    julien: 'https://i.imgur.com/AXq6Q6B.png'
+  };
+
+  // MISSIONS: array devidamente formatado (correção principal aqui)
+  const missions = [
+  {
+    id: 1,
+    title: "Segurança no Laboratório: Regras e EPIs",
+    character: "img/alex_cientista.png", // Imagem do Alex
+    questions: [
+      {
+        q: "Qual é a primeira regra de segurança ao entrar no laboratório, segundo as normas?",
+        options: [
+          "Começar a experimentar imediatamente.",
+          "Verificar se o avental está limpo e em condições de trabalho.",
+          "Comer e beber antes de iniciar as atividades.",
+          "Trabalhar sozinho para maior concentração."
+        ],
+        correct: 1,
+        explanation: "A primeira regra é garantir que o avental esteja limpo e adequado para o trabalho, protegendo sua roupa e pele. (REGRAS DE SEGURANÇA 2025 Biotecnologia.pdf, item 1)",
+        image: "img/avental_limpo.png" // Imagem de um avental
+      },
+      {
+        q: "Qual tipo de calçado é proibido no laboratório por questões de segurança?",
+        options: [
+          "Tênis fechado",
+          "Botas de segurança",
+          "Sandálias, chinelos ou sapatos abertos",
+          "Sapatos de couro fechados"
+        ],
+        correct: 2,
+        explanation: "Sandálias, chinelos ou sapatos abertos colocam em risco a segurança do aluno, expondo os pés a derramamentos e objetos. (REGRAS DE SEGURANÇA 2025 Biotecnologia.pdf, item 2)",
+        image: "img/calcado_seguro.png" // Imagem de calçados seguros vs. abertos
+      },
+      {
+        q: "Por que é expressamente proibido o uso de lentes de contato durante os trabalhos de laboratório?",
+        options: [
+          "Elas podem ser danificadas por vapores de produtos químicos, causando lesões oculares graves.",
+          "Elas podem cair e contaminar as amostras.",
+          "Elas dificultam a visão de detalhes microscópicos.",
+          "Não há motivo específico, é apenas uma recomendação."
+        ],
+        correct: 0,
+        explanation: "Vapores químicos podem danificar as lentes e causar lesões oculares graves, além de dificultar a remoção em caso de emergência. (REGRAS DE SEGURANÇA 2025 Biotecnologia.pdf, item 3)",
+        image: "img/lentes_contato_perigo.png" // Imagem de olhos com lentes e vapores
+      },
+      {
+        q: "Qual a importância de utilizar Equipamentos de Proteção Individual (EPI) e Coletiva (EPC)?",
+        options: [
+          "Apenas para cumprir as regras, sem impacto real na segurança.",
+          "Para identificar riscos inerentes ao trabalho no laboratório.",
+          "Para proteger o indivíduo e o ambiente de trabalho contra riscos e acidentes.",
+          "Para realizar a manutenção preventiva de equipamentos."
+        ],
+        correct: 2,
+        explanation: "EPIs e EPCs são essenciais para proteger a saúde e segurança de todos no laboratório, minimizando a exposição a riscos. (REGRAS DE SEGURANÇA 2025 Biotecnologia.pdf, HABILIDADES 1.2)",
+        image: "img/epis_epcs.png" // Imagem de pessoas usando EPIs e EPCs
+      },
+      {
+        q: "Qual das seguintes ações é uma boa prática para evitar acidentes com cabelos longos e joias no laboratório?",
+        options: [
+          "Deixar o cabelo solto para maior conforto.",
+          "Usar joias grandes e chamativas.",
+          "Manter o cabelo preso e evitar o uso de joias (braceletes, anéis, colares).",
+          "Cobrir o cabelo com um chapéu."
+        ],
+        correct: 2,
+        explanation: "Cabelos soltos e joias podem se prender em equipamentos, cair em reagentes ou causar acidentes. Mantê-los presos e removê-los é crucial. (REGRAS DE SEGURANÇA 2025 Biotecnologia.pdf, itens 4 e 5)",
+        image: "img/cabelo_preso_joias.png" // Imagem de cabelo preso e sem joias
+      },
+      {
+        q: "É permitido fumar, comer, beber ou mascar chicletes no laboratório?",
+        options: [
+          "Sim, desde que longe dos reagentes.",
+          "Não, é expressamente proibido.",
+          "Apenas se for rápido e discreto.",
+          "Somente com autorização do professor."
+        ],
+        correct: 1,
+        explanation: "É proibido fumar, comer, beber ou mascar chicletes no laboratório para evitar contaminação e acidentes. (REGRAS DE SEGURANÇA 2025 Biotecnologia.pdf, item 7)",
+        image: "img/proibido_comer.png" // Símbolo de proibido comer/beber
+      },
+      {
+        q: "O que fazer em caso de quebra ou desaparecimento de material no laboratório?",
+        options: [
+          "Esconder para não ser repreendido.",
+          "Comunicar imediatamente ao professor ou estagiário.",
+          "Tentar consertar sozinho.",
+          "Esperar o fim da aula para avisar."
+        ],
+        correct: 1,
+        explanation: "Toda quebra ou desaparecimento de material deve ser comunicada imediatamente ao professor ou estagiário para registro e providências. (REGRAS DE SEGURANÇA 2025 Biotecnologia.pdf, item 11)",
+        image: "img/material_quebrado.png" // Imagem de material de vidro quebrado
+      }
+    ]
+  },
+  {
+    id: 2,
+    title: "Riscos e Incompatibilidade de Reagentes",
+    character: "img/marty_mapa_risco.png", // Imagem do Marty
+    questions: [
+      {
+        q: "O que é considerado um 'risco' no ambiente de laboratório?",
+        options: [
+          "Qualquer atividade que envolva reagentes químicos.",
+          "Todo perigo ou possibilidade de perigo que pode causar perda ou dano.",
+          "Apenas a chance de quebrar uma vidraria.",
+          "Somente a exposição a agentes biológicos."
+        ],
+        correct: 1,
+        explanation: "Risco é a probabilidade de um perigo se concretizar, resultando em dano ou perda. A identificação do risco é primordial. (Teoria.pdf, pág. 5)",
+        image: "img/definicao_risco.png" // Imagem de um sinal de perigo
+      },
+      {
+        q: "Qual tipo de risco está associado ao contato com produtos químicos irritantes, venenosos ou tóxicos?",
+        options: [
+          "Risco Físico",
+          "Risco Biológico",
+          "Risco Químico",
+          "Risco Ergonômico"
+        ],
+        correct: 2,
+        explanation: "Riscos Químicos são aqueles decorrentes do contato com substâncias químicas perigosas. (Teoria.pdf, pág. 5)",
+        image: "img/simbolo_quimico_perigo.png" // Símbolo de perigo químico
+      },
+      {
+        q: "Um mapa de risco é uma representação gráfica que serve para:",
+        options: [
+          "Decorar o laboratório.",
+          "Representar todos os riscos existentes em um local de trabalho.",
+          "Indicar a localização dos extintores apenas.",
+          "Controlar o estoque de reagentes."
+        ],
+        correct: 1,
+        explanation: "O mapa de risco visualiza os perigos e sua magnitude, auxiliando na prevenção de acidentes e doenças ocupacionais. (Teoria.pdf, pág. 5)",
+        image: "img/mapa_risco_exemplo.png" // Exemplo de mapa de risco
+      },
+      {
+        q: "O que significa 'incompatibilidade entre produtos químicos'?",
+        options: [
+          "Produtos que não se misturam bem.",
+          "Condição na qual produtos se tornam perigosos quando armazenados próximos a outros com os quais podem reagir.",
+          "Produtos que têm cores diferentes.",
+          "Produtos que precisam de temperaturas diferentes para armazenamento."
+        ],
+        correct: 1,
+        explanation: "A incompatibilidade química ocorre quando a proximidade de certas substâncias pode levar a reações perigosas, como incêndios ou explosões. (Teoria.pdf, pág. 7)",
+        image: "img/incompatibilidade_quimica.png" // Símbolos de reagentes incompatíveis
+      },
+      {
+        q: "Por que os agentes oxidantes são considerados perigosos no armazenamento?",
+        options: [
+          "Eles são sempre corrosivos.",
+          "Eles fornecem oxigênio, um dos elementos necessários para a formação do fogo.",
+          "Eles reagem com a água de forma explosiva.",
+          "Eles são muito caros e podem ser roubados."
+        ],
+        correct: 1,
+        explanation: "Agentes oxidantes liberam oxigênio, que pode intensificar um incêndio ou causar explosões se estiverem próximos a materiais combustíveis. (Teoria.pdf, pág. 7)",
+        image: "img/simbolo_oxidante.png" // Símbolo de oxidante
+      },
+      {
+        q: "Qual a recomendação para o armazenamento de recipientes contendo grandes quantidades de um produto químico?",
+        options: [
+          "Guardá-los em prateleiras altas para economizar espaço.",
+          "Guardá-los ao nível do solo para evitar quedas e acidentes.",
+          "Deixá-los no corredor para fácil acesso.",
+          "Armazená-los junto com produtos incompatíveis."
+        ],
+        correct: 1,
+        explanation: "Recipientes grandes devem ser guardados ao nível do solo para evitar acidentes por queda. (Teoria.pdf, pág. 8)",
+        image: "img/armazenamento_seguro.png" // Imagem de armazenamento seguro de reagentes
+      },
+      {
+        q: "O que o Diamante de Hommel (NFPA 704) indica sobre um produto químico?",
+        options: [
+          "Apenas o nome do produto.",
+          "Todos os riscos envolvidos (inflamabilidade, saúde, reatividade e riscos específicos).",
+          "A data de validade do produto.",
+          "O fabricante do produto."
+        ],
+        correct: 1,
+        explanation: "O Diamante de Hommel é uma simbologia que indica os riscos de inflamabilidade (vermelho), saúde (azul), reatividade (amarelo) e riscos específicos (branco). (Teoria.pdf, pág. 10)",
+        image: "img/diamante_hommel_completo.png" // Imagem do Diamante de Hommel completo
+      }
+    ]
+  },
+  {
+    id: 3,
+    title: "Manuseio de Vidrarias e Aparelhagens",
+    character: "img/melman_microscopio.png", // Imagem do Melman
+    questions: [
+      {
+        q: "Qual o principal cuidado ao manusear vidrarias trincadas ou irregulares?",
+        options: [
+          "Usá-las com cuidado extra.",
+          "Descartá-las imediatamente para evitar acidentes.",
+          "Colar a trinca com fita adesiva.",
+          "Aquecê-las para ver se a trinca desaparece."
+        ],
+        correct: 1,
+        explanation: "Vidrarias trincadas ou irregulares podem quebrar facilmente, causando cortes e derramamentos. Devem ser descartadas. (Teoria.pdf, pág. 8)",
+        image: "img/vidraria_quebrada.png" // Imagem de vidraria trincada
+      },
+      {
+        q: "Quando se deve usar luvas de pelica ou de malha metálica e óculos de segurança ao manusear vidrarias?",
+        options: [
+          "Apenas ao trabalhar com ácidos.",
+          "Sempre que atravessar tubos de vidro em rolhas, remover tampas emperradas ou montar equipamentos.",
+          "Somente se a vidraria estiver quente.",
+          "Nunca, pois atrapalha a sensibilidade."
+        ],
+        correct: 1,
+        explanation: "Esses equipamentos protegem contra cortes e estilhaços em operações que exigem força ou manipulação de vidro. (Teoria.pdf, pág. 8)",
+        image: "img/luvas_oculos.png" // Imagem de luvas e óculos de segurança
+      },
+      {
+        q: "Por que não se deve colocar vidrarias quentes diretamente na bancada de mármore?",
+        options: [
+          "Para não manchar a bancada.",
+          "Pode causar um choque térmico e quebrar o vidro.",
+          "A bancada pode absorver o calor da vidraria.",
+          "É apenas uma questão de organização."
+        ],
+        correct: 1,
+        explanation: "O choque térmico entre a vidraria quente e a superfície fria do mármore pode causar a quebra do vidro. (Teoria.pdf, pág. 8)",
+        image: "img/vidraria_quente_bancada.png" // Imagem de vidraria quente em placa refratária
+      },
+      {
+        q: "Qual a recomendação para aquecer líquidos em recipiente de vidro diretamente na chama do bico de Bunsen?",
+        options: [
+          "É permitido, desde que o vidro seja resistente.",
+          "Nunca, deve-se usar sempre a tela de amianto.",
+          "Apenas se o líquido for água.",
+          "Pode-se aquecer, mas com a chama baixa."
+        ],
+        correct: 1,
+        explanation: "Aquecer diretamente na chama pode causar superaquecimento localizado e quebra do vidro. A tela de amianto distribui o calor uniformemente. (Teoria.pdf, pág. 8)",
+        image: "img/bico_bunsen_tela_amianto.png" // Imagem de bico de Bunsen com tela de amianto
+      },
+      {
+        q: "Ao montar aparelhagens de vidro, qual o cuidado principal para evitar quebras?",
+        options: [
+          "Aplicar força excessiva para encaixar as peças.",
+          "Não usar óculos de proteção.",
+          "Manter o alinhamento dos tubos de conexão e evitar apertos excessivos.",
+          "Lubrificar as peças com água e sabão."
+        ],
+        correct: 2,
+        explanation: "O vidro não possui flexibilidade, e forças excessivas ou desalinhamento podem causar quebras. O alinhamento e a lubrificação adequada são importantes. (Teoria.pdf, pág. 9)",
+        image: "img/montagem_vidraria.png" // Imagem de montagem de aparelhagem de vidro
+      },
+      {
+        q: "Qual o procedimento correto para cortar tubos de vidro?",
+        options: [
+          "Quebrar com as mãos diretamente.",
+          "Fazer uma marca única com lima triangular, colocar os polegares e puxar/dobrar.",
+          "Aquecer o tubo e depois quebrar.",
+          "Usar uma tesoura."
+        ],
+        correct: 1,
+        explanation: "O corte seguro envolve marcar com lima, aplicar pressão e dobrar para quebrar no ponto frágil. (Teoria.pdf, pág. 40)",
+        image: "img/cortar_tubo_vidro.png" // Imagem ilustrando o corte de tubo de vidro
+      }
+    ]
+  },
+  {
+    id: 4,
+    title: "Manuseio de Reagentes Químicos e Capela",
+    character: "img/gloria_reagentes.png", // Imagem da Gloria
+    questions: [
+      {
+        q: "Qual a primeira ação a ser tomada antes de utilizar um reagente químico?",
+        options: [
+          "Cheirar o reagente para identificar.",
+          "Ler as informações de segurança (FISPQ ou rótulo).",
+          "Misturar com outros reagentes para testar a reação.",
+          "Descartar o excesso na pia."
+        ],
+        correct: 1,
+        explanation: "É fundamental conhecer os riscos do reagente lendo a FISPQ ou o rótulo para planejar a manipulação segura e o uso de EPIs. (Teoria.pdf, pág. 9)",
+        image: "img/fisqp_rotulo.png" // Imagem de uma FISPQ ou rótulo de reagente
+      },
+      {
+        q: "Ao diluir um ácido, qual é o procedimento correto?",
+        options: [
+          "Adicionar água ao ácido vagarosamente.",
+          "Adicionar ácido à água vagarosamente.",
+          "Misturar rapidamente os dois.",
+          "Não importa a ordem, desde que se use luvas."
+        ],
+        correct: 1,
+        explanation: "Sempre adicione ácido à água, vagarosamente. Adicionar água ao ácido pode causar uma reação exotérmica violenta e respingos. (REGRAS DE SEGURANÇA 2025 Biotecnologia.pdf, item 10)",
+        image: "img/diluicao_acido.png" // Imagem ilustrando a diluição correta de ácido
+      },
+      {
+        q: "Qual a recomendação para manipular produtos tóxicos ou que liberam vapores/gases desagradáveis?",
+        options: [
+          "Manipular em qualquer local do laboratório.",
+          "Manipular apenas com luvas.",
+          "Manipular dentro de uma capela.",
+          "Manipular apenas em pequenas quantidades."
+        ],
+        correct: 2,
+        explanation: "Produtos tóxicos ou que liberam vapores/gases devem ser manipulados dentro de uma capela para evitar a inalação. (REGRAS DE SEGURANÇA 2025 Biotecnologia.pdf, item 6)",
+        image: "img/capela_laboratorio.png" // Imagem de uma capela de laboratório
+      },
+      {
+        q: "Por que não se deve retornar reagentes não usados aos frascos de origem?",
+        options: [
+          "Para evitar a contaminação do reagente original.",
+          "Porque o frasco pode estar sujo.",
+          "Para economizar tempo.",
+          "Não há problema em retornar, desde que seja o mesmo reagente."
+        ],
+        correct: 0,
+        explanation: "Nunca retorne reagentes aos frascos de origem para evitar a contaminação do estoque original. Descarte-os corretamente. (REGRAS DE SEGURANÇA 2025 Biotecnologia.pdf, item 11)",
+        image: "img/nao_retornar_reagente.png" // Símbolo de proibido retornar reagente
+      },
+      {
+        q: "Qual o cuidado ao testar um produto químico pelo odor?",
+        options: [
+          "Colocar o frasco diretamente sob o nariz e inalar profundamente.",
+          "Não colocar o produto ou frasco diretamente sob o nariz; usar a mão para direcionar o vapor.",
+          "Cheirar rapidamente e se afastar.",
+          "Pedir para outra pessoa cheirar primeiro."
+        ],
+        correct: 1,
+        explanation: "Para testar o odor, direcione o vapor com a mão para o nariz, sem inalar diretamente, para evitar a inalação excessiva de substâncias nocivas. (REGRAS DE SEGURANÇA 2025 Biotecnologia.pdf, item 13)",
+        image: "img/testar_odor.png" // Imagem ilustrando como cheirar corretamente
+      }
+    ]
+  },
+  {
+    id: 5,
+    title: "Equipamentos de Laboratório e Suas Funções",
+    character: "img/julien_equipamento.png", // Imagem do Rei Julien
+    questions: [
+      {
+        q: "Qual equipamento é utilizado para efetuar pesagens de reagentes e substâncias com precisão de 4 a 5 casas após a vírgula?",
+        options: [
+          "Balança semi-analítica",
+          "Balança analítica",
+          "Balança de plataforma",
+          "Balança de cozinha"
+        ],
+        correct: 1,
+        explanation: "A balança analítica é projetada para pesagens de alta precisão, essencial em análises químicas. (Teoria.pdf, pág. 14)",
+        image: "img/balanca_analitica.png" // Imagem de uma balança analítica
+      },
+      {
+        q: "Qual a finalidade de uma estufa em um laboratório?",
+        options: [
+          "Resfriar amostras.",
+          "Aquecer líquidos rapidamente.",
+          "Cultura bacteriológica, esterilização e secagem.",
+          "Medir pH de soluções."
+        ],
+        correct: 2,
+        explanation: "Estufas são usadas para manter temperaturas controladas para cultura de microrganismos, esterilizar materiais e secar amostras. (Teoria.pdf, pág. 15)",
+        image: "img/estufa_laboratorio.png" // Imagem de uma estufa de laboratório
+      },
+      {
+        q: "O que é um pHmetro e qual sua função?",
+        options: [
+          "Um aparelho para medir a temperatura.",
+          "Um aparelho para medir a concentração de íons hidrogênio (pH) em uma solução.",
+          "Um aparelho para destilar água.",
+          "Um aparelho para agitar soluções."
+        ],
+        correct: 1,
+        explanation: "O pHmetro mede o potencial hidrogeniônico (pH), indicando a acidez ou basicidade de uma solução. (Teoria.pdf, pág. 15)",
+        image: "img/phmetro.png" // Imagem de um pHmetro
+      },
+      {
+        q: "Qual a função do bico de Bunsen no laboratório?",
+        options: [
+          "Resfriar amostras.",
+          "Aquecer materiais não inflamáveis.",
+          "Medir volumes de líquidos.",
+          "Misturar reagentes."
+        ],
+        correct: 1,
+        explanation: "O bico de Bunsen é usado para aquecimento controlado de substâncias e materiais que não são inflamáveis. (Teoria.pdf, pág. 16)",
+        image: "img/bico_bunsen.png" // Imagem de um bico de Bunsen
+      },
+      {
+        q: "Para que serve um dessecador?",
+        options: [
+          "Para aquecer substâncias.",
+          "Para guardar substâncias em atmosfera com baixa umidade.",
+          "Para misturar líquidos.",
+          "Para filtrar soluções."
+        ],
+        correct: 1,
+        explanation: "Dessecadores são usados para manter substâncias secas, protegendo-as da umidade do ar, geralmente com sílica gel em seu interior. (Teoria.pdf, pág. 20)",
+        image: "img/dessecador.png" // Imagem de um dessecador
+      },
+      {
+        q: "Qual a finalidade de uma bureta?",
+        options: [
+          "Armazenar grandes volumes de líquidos.",
+          "Medir volumes de líquidos com precisão em titulações.",
+          "Aquecer soluções.",
+          "Filtrar substâncias."
+        ],
+        correct: 1,
+        explanation: "A bureta é um equipamento calibrado para medida precisa de volume, fundamental em titulações. (Teoria.pdf, pág. 19)",
+        image: "img/bureta.png" // Imagem de uma bureta
+      },
+      {
+        q: "Para que serve o balão volumétrico?",
+        options: [
+          "Para aquecer líquidos.",
+          "Para armazenar reagentes.",
+          "Para preparar soluções com volume definido e dissolução de amostras.",
+          "Para realizar filtrações."
+        ],
+        correct: 2,
+        explanation: "O balão volumétrico é empregado para volumes definidos de líquidos ou soluções, utilizado para o preparo de soluções e dissolução de amostras. (Teoria.pdf, pág. 19)",
+        image: "img/balao_volumetrico.png" // Imagem de um balão volumétrico
+      }
+    ]
+  },
+  {
+    id: 6,
+    title: "Propriedades Físico-Químicas",
+    character: "img/alex_densidade.png", // Imagem do Alex
+    questions: [
+      {
+        q: "O que é densidade?",
+        options: [
+          "A cor de uma substância.",
+          "A relação entre a massa de um corpo e o volume ocupado por ele.",
+          "A capacidade de uma substância de se dissolver.",
+          "O ponto de ebulição de um líquido."
+        ],
+        correct: 1,
+        explanation: "Densidade é uma propriedade física que relaciona a massa de uma substância com o volume que ela ocupa (d = m/V). (Teoria.pdf, pág. 29)",
+        image: "img/densidade_formula.png" // Imagem da fórmula da densidade
+      },
+      {
+        q: "Por que é importante indicar a temperatura ao medir a densidade de um líquido?",
+        options: [
+          "A densidade de líquidos não varia com a temperatura.",
+          "A densidade de líquidos varia com a temperatura.",
+          "A temperatura afeta apenas a cor do líquido.",
+          "É uma convenção sem importância prática."
+        ],
+        correct: 1,
+        explanation: "A densidade de líquidos sofre alteração significativa com a variação de temperatura, por isso a temperatura da medida deve ser sempre indicada. (Teoria.pdf, pág. 29)",
+        image: "img/termometro_liquido.png" // Imagem de um termômetro em um líquido
+      },
+      {
+        q: "Qual equipamento é utilizado para medir a densidade de líquidos?",
+        options: [
+          "Balança analítica",
+          "pHmetro",
+          "Hidrômetro (densímetro) ou Picnômetro",
+          "Bico de Bunsen"
+        ],
+        correct: 2,
+        explanation: "Hidrômetros (densímetros) e picnômetros são equipamentos específicos para a determinação da densidade de líquidos. (Teoria.pdf, pág. 30)",
+        image: "img/densimetro_picnometro.png" // Imagem de um densímetro e um picnômetro
+      },
+      {
+        q: "O que é o 'ponto de fusão' de uma substância?",
+        options: [
+          "A temperatura em que ela evapora.",
+          "A temperatura em que ela se dissolve.",
+          "A temperatura em que ela passa do estado sólido para o líquido.",
+          "A temperatura em que ela se decompõe."
+        ],
+        correct: 2,
+        explanation: "O ponto de fusão é a temperatura específica na qual uma substância pura muda do estado sólido para o líquido. (Teoria.pdf, pág. 28)",
+        image: "img/ponto_fusao.png" // Gráfico de mudança de estado com fusão
+      },
+      {
+        q: "Em um gráfico de mudança de estado para substâncias puras, o que o 'patamar' indica?",
+        options: [
+          "Variação constante de temperatura.",
+          "A temperatura permanece constante durante a mudança de estado.",
+          "A substância está se decompondo.",
+          "A substância está se misturando com outra."
+        ],
+        correct: 1,
+        explanation: "O patamar indica que, durante a mudança de estado (fusão ou ebulição), a temperatura da substância pura permanece constante. (Teoria.pdf, pág. 28)",
+        image: "img/grafico_mudanca_estado.png" // Gráfico de mudança de estado com patamar
+      },
+      {
+        q: "O que é o 'coeficiente de solubilidade'?",
+        options: [
+          "A velocidade com que um soluto se dissolve.",
+          "A quantidade máxima de soluto que se dissolve em um determinado solvente a uma dada temperatura.",
+          "A temperatura em que um soluto se torna insolúvel.",
+          "A cor da solução formada."
+        ],
+        correct: 1,
+        explanation: "O coeficiente de solubilidade define o limite de quanto soluto pode ser dissolvido em um solvente sob condições específicas de temperatura. (Teoria.pdf, pág. 35)",
+        image: "img/solubilidade_curva.png" // Curva de solubilidade
+      },
+      {
+        q: "Quando uma solução contém uma quantidade de soluto menor que o coeficiente de solubilidade, ela é chamada de:",
+        options: [
+          "Solução saturada.",
+          "Solução supersaturada.",
+          "Solução insaturada.",
+          "Solução concentrada."
+        ],
+        correct: 2,
+        explanation: "Uma solução insaturada ainda pode dissolver mais soluto. (Teoria.pdf, pág. 35)",
+        image: ""
+      }
+    ]
+  },
+  {
+    id: 7,
+    title: "Técnicas de Separação e Análise Química",
+    character: "img/marty_separacao.png", // Imagem do Marty
+    questions: [
+      {
+        q: "Qual técnica de separação é usada para separar sólidos de líquidos através de um material poroso?",
+        options: [
+          "Decantação",
+          "Centrifugação",
+          "Filtração",
+          "Destilação"
+        ],
+        correct: 2,
+        explanation: "A filtração utiliza um filtro para reter as partículas sólidas, permitindo a passagem do líquido. (Teoria.pdf, pág. 39)",
+        image: "img/filtracao_simples.png" // Imagem de filtração simples
+      },
+      {
+        q: "Para separar líquidos imiscíveis (que não se misturam) com densidades diferentes, qual técnica é mais adequada?",
+        options: [
+          "Filtração",
+          "Destilação",
+          "Decantação com funil de bromo",
+          "Centrifugação"
+        ],
+        correct: 2,
+        explanation: "A decantação com funil de bromo (ou funil de separação) permite separar líquidos imiscíveis, como água e óleo. (Teoria.pdf, pág. 40)",
+        image: "img/funil_separacao.png" // Imagem de um funil de separação
+      },
+      {
+        q: "O que é a 'titulação' em análise química?",
+        options: [
+          "Um método para separar misturas homogêneas.",
+          "Um método para determinar a concentração de soluções usando uma reação química controlada.",
+          "Um processo de aquecimento de substâncias.",
+          "Uma técnica para medir a densidade de líquidos."
+        ],
+        correct: 1,
+        explanation: "A titulação é uma técnica analítica quantitativa que determina a concentração de uma substância em solução. (Teoria.pdf, pág. 46)",
+        image: "img/titulacao.png" // Imagem de uma titulação
+      },
+      {
+        q: "Qual a finalidade da 'calcinação' em laboratório?",
+        options: [
+          "Dissolver substâncias.",
+          "Queimar material orgânico a seco no ar, transformando-o em óxidos.",
+          "Separar líquidos voláteis.",
+          "Medir o pH de soluções."
+        ],
+        correct: 1,
+        explanation: "A calcinação é um processo de aquecimento a altas temperaturas para queimar a matéria orgânica e obter resíduos inorgânicos (óxidos). (Teoria.pdf, pág. 47)",
+        image: "img/mufla_calcination.png" // Imagem de uma mufla
+      },
+      {
+        q: "A 'destilação simples' é utilizada para separar:",
+        options: [
+          "Sólidos de líquidos imiscíveis.",
+          "Misturas homogêneas de líquidos e de líquidos com sólidos, baseada no ponto de ebulição.",
+          "Apenas gases de líquidos.",
+          "Misturas de sólidos com diferentes densidades."
+        ],
+        correct: 1,
+        explanation: "A destilação simples separa componentes de uma mistura com pontos de ebulição diferentes, onde o mais volátil evapora e depois condensa. (Teoria.pdf, pág. 47)",
+        image: "img/destilacao_simples.png" // Imagem de uma aparelhagem de destilação simples
+      },
+      {
+        q: "Qual a diferença entre precisão e exatidão em uma medida?",
+        options: [
+          "São sinônimos, significam a mesma coisa.",
+          "Precisão é a concordância entre o valor verdadeiro e o obtido; Exatidão é a reprodutibilidade.",
+          "Precisão é a reprodutibilidade de uma série de medidas; Exatidão é a concordância com o valor verdadeiro.",
+          "Precisão se refere a erros sistemáticos; Exatidão a erros aleatórios."
+        ],
+        correct: 2,
+        explanation: "Precisão refere-se à proximidade entre si de várias medidas (reprodutibilidade), enquanto exatidão refere-se à proximidade de uma medida com o valor verdadeiro. (Teoria.pdf, pág. 25)",
+        image: "img/precisao_exatidao.png" // Imagem de alvo com precisão e exatidão
+      },
+      {
+        q: "Qual o objetivo da limpeza de materiais de laboratório com detergente neutro, água potável e água deionizada/desmineralizada?",
+        options: [
+          "Apenas para deixar o material brilhando.",
+          "Eliminar possíveis contaminantes que possam causar erros no processo analítico.",
+          "Economizar reagentes.",
+          "Aumentar a vida útil do material."
+        ],
+        correct: 1,
+        explanation: "A limpeza adequada é crucial para remover contaminantes que poderiam interferir nos resultados das análises. (Teoria.pdf, pág. 22)",
+        image: "img/limpeza_vidraria.png" // Imagem de vidraria sendo lavada
+      }
+    ]
+  },
+  {
+    id: 8,
+    title: "Reações Químicas e pH",
+    character: "img/gloria_reacao_quimica.png", // Imagem da Gloria
+    questions: [
+      {
+        q: "Qual das seguintes observações indica que uma reação química está ocorrendo?",
+        options: [
+          "Liberação ou evolução de gás.",
+          "Formação de precipitado.",
+          "Formação de complexo ou composto de coordenação.",
+          "Todas as alternativas anteriores."
+        ],
+        correct: 3,
+        explanation: "Todas essas são evidências visíveis de que uma transformação química está acontecendo. (Teoria.pdf, pág. 49)",
+        image: "img/reacao_quimica_evidencias.png" // Imagem de reações com gás, precipitado
+      },
+      {
+        q: "O que significa a seta para baixo (↓) em uma equação química?",
+        options: [
+          "Liberação de gás.",
+          "Formação de precipitado.",
+          "Aquecimento.",
+          "Reação reversível."
+        ],
+        correct: 1,
+        explanation: "A seta para baixo indica que um produto sólido insolúvel (precipitado) foi formado. (Teoria.pdf, pág. 49)",
+        image: "img/simbolo_precipitado.png" // Símbolo de precipitado
+      },
+      {
+        q: "Qual o resultado de uma reação de neutralização entre um ácido e uma base?",
+        options: [
+          "Apenas gás.",
+          "Sal e água.",
+          "Dois novos ácidos.",
+          "Dois novos bases."
+        ],
+        correct: 1,
+        explanation: "A reação de neutralização (ácido + base) sempre produz um sal e água. (Teoria.pdf, pág. 51)",
+        image: "img/reacao_neutralizacao.png" // Exemplo de reação de neutralização
+      },
+      {
+        q: "Qual o pH de uma solução neutra?",
+        options: [
+          "Menor que 7.",
+          "Igual a 7.",
+          "Maior que 7.",
+          "Igual a 0."
+        ],
+        correct: 1,
+        explanation: "A escala de pH varia de 0 a 14, sendo que valores menores que 7 indicam produtos ácidos, valores maiores que 7 indicam produtos básicos, e 7 indica neutralidade. (Teoria.pdf, pág. 51)",
+        image: "img/escala_ph.png" // Imagem da escala de pH
+      },
+      {
+        q: "O que são 'indicadores' em reações químicas?",
+        options: [
+          "Substâncias que aceleram a reação.",
+          "Substâncias que mudam de cor conforme o valor do pH.",
+          "Substâncias que aumentam a temperatura da reação.",
+          "Substâncias que formam precipitados."
+        ],
+        correct: 1,
+        explanation: "Indicadores são substâncias que apresentam cores diferentes em diferentes faixas de pH, permitindo a visualização da variação do pH. (Teoria.pdf, pág. 51)",
+        image: "img/indicadores_ph.png" // Imagem de indicadores de pH
+      }
+    ]
+  },
+  {
+    id: 9,
+    title: "Análise Qualitativa de Cátions e Ânions",
+    character: "img/julien_analise_qualitativa.png", // Imagem do Rei Julien
+    questions: [
+      {
+        q: "Na análise qualitativa de cátions, como eles são geralmente separados em grupos?",
+        options: [
+          "Pela cor do cátion.",
+          "Pelo tamanho do cátion.",
+          "Conforme reagem com um reagente específico (reagente de grupo).",
+          "Pela sua massa atômica."
+        ],
+        correct: 2,
+        explanation: "Os cátions são divididos em grupos com base na sua reatividade com reagentes específicos, que causam precipitação ou outras reações características. (Teoria.pdf, pág. 52)",
+        image: "img/grupos_catios.png" // Diagrama de separação de cátions
+      },
+      {
+        q: "Qual a principal evidência visual para identificar o ânion Cloreto (Cl-) em uma solução?",
+        options: [
+          "Formação de gás carbônico.",
+          "Formação de um precipitado branco de AgCl com nitrato de prata (AgNO3).",
+          "Mudança de cor para azul.",
+          "Liberação de calor."
+        ],
+        correct: 1,
+        explanation: "A formação de um precipitado branco de cloreto de prata (AgCl) é um teste clássico para a presença de íons cloreto. (Teoria.pdf, pág. 53)",
+        image: "img/teste_cloreto.png" // Imagem de precipitado branco de AgCl
+      },
+      {
+        q: "O que é o 'teste de chama' e para que é utilizado?",
+        options: [
+          "Para verificar a inflamabilidade de um líquido.",
+          "Para identificar metais pela cor que emitem quando aquecidos diretamente em uma chama.",
+          "Para medir a temperatura de uma chama.",
+          "Para esterilizar materiais de laboratório."
+        ],
+        correct: 1,
+        explanation: "O teste de chama é uma técnica qualitativa que identifica certos íons metálicos pela cor característica que eles emitem quando aquecidos em uma chama. (Teoria.pdf, pág. 55)",
+        image: "img/teste_chama.png" // Imagem de teste de chama com cores
+      },
+      {
+        q: "Qual a importância da formação de complexos (compostos de coordenação) na química analítica?",
+        options: [
+          "Eles sempre são insolúveis.",
+          "Eles não têm importância prática.",
+          "Eles apresentam propriedades diferentes do precipitado, sendo úteis para identificação e separação de cátions.",
+          "Eles indicam a presença de ácidos fortes."
+        ],
+        correct: 2,
+        explanation: "A formação de complexos pode alterar a solubilidade ou a cor de íons metálicos, sendo uma ferramenta valiosa para a identificação e separação em análises qualitativas. (Teoria.pdf, pág. 50)",
+        image: "img/complexo_quimico.png" // Exemplo de complexo metálico
+      },
+      {
+        q: "Qual a principal característica do ânion Carbonato (CO3^2-) em presença de ácido?",
+        options: [
+          "Forma um precipitado azul.",
+          "Libera gás oxigênio.",
+          "Libera gás carbônico (CO2) com efervescência.",
+          "Muda de cor para roxo."
+        ],
+        correct: 2,
+        explanation: "Carbonatos reagem com ácidos liberando dióxido de carbono (CO2), que é observado como efervescência. (Teoria.pdf, pág. 54)",
+        image: "img/reacao_carbonato_acido.png" // Imagem de efervescência
+      }
+    ]
+  },
+  {
+    id: 10,
+    title: "Prevenção e Combate a Incêndios",
+    character: "img/alex_extintor.png", // Imagem do Alex
+    questions: [
+      {
+        q: "Quais são os três elementos básicos que compõem o 'triângulo do fogo'?",
+        options: [
+          "Água, ar e calor.",
+          "Combustível, comburente e calor.",
+          "Fumaça, chamas e faíscas.",
+          "Madeira, papel e gás."
+        ],
+        correct: 1,
+        explanation: "O fogo necessita de combustível (material que queima), comburente (geralmente oxigênio) e calor para iniciar e se manter. (BOAS PRÁTICAS DE LABORATÓRIO_2025.pdf, pág. 10)",
+        image: "img/triangulo_fogo.png" // Imagem do triângulo do fogo
+      },
+      {
+        q: "Qual método de extinção do fogo consiste em diminuir a temperatura do material em combustão?",
+        options: [
+          "Abafamento.",
+          "Isolamento.",
+          "Resfriamento.",
+          "Extinção química."
+        ],
+        correct: 2,
+        explanation: "O resfriamento, geralmente com água, reduz a temperatura do combustível abaixo do seu ponto de ignição, extinguindo o fogo. (BOAS PRÁTICAS DE LABORATÓRIO_2025.pdf, pág. 15)",
+        image: "img/extincao_resfriamento.png" // Imagem de água sendo usada para apagar fogo
+      },
+      {
+        q: "O que é o 'abafamento' como método de extinção do fogo?",
+        options: [
+          "Remover o combustível.",
+          "Interromper a reação em cadeia.",
+          "Impedir que o comburente (oxigênio) permaneça em contato com o combustível.",
+          "Diminuir a temperatura."
+        ],
+        correct: 2,
+        explanation: "O abafamento remove ou reduz o oxigênio disponível para a combustão, sufocando o fogo. (BOAS PRÁTICAS DE LABORATÓRIO_2025.pdf, pág. 16)",
+        image: "img/extincao_abafamento.png" // Imagem de manta corta-fogo ou CO2
+      },
+      {
+        q: "Qual classe de incêndio é caracterizada por materiais fibrosos ou combustíveis sólidos que deixam resíduos (cinzas ou brasas)?",
+        options: [
+          "Classe B.",
+          "Classe C.",
+          "Classe A.",
+          "Classe D."
+        ],
+        correct: 2,
+        explanation: "Incêndios de Classe A envolvem materiais como madeira, papel, borracha, tecidos, que queimam em volume e profundidade. (BOAS PRÁTICAS DE LABORATÓRIO_2025.pdf, pág. 18)",
+        image: "img/classe_a_incendio.png" // Símbolo de incêndio Classe A
+      },
+      {
+        q: "Qual tipo de extintor é mais adequado para incêndios de Classe A (materiais sólidos como papel e madeira)?",
+        options: [
+          "Extintor de CO2.",
+          "Extintor de Pó Químico Seco.",
+          "Extintor de Água.",
+          "Extintor de Espuma."
+        ],
+        correct: 2,
+        explanation: "O extintor de água é eficaz para incêndios de Classe A, pois age por resfriamento. (BOAS PRÁTICAS DE LABORATÓRIO_2025.pdf, pág. 18)",
+        image: "img/extintor_agua.png" // Imagem de extintor de água
+      },
+      {
+        q: "O que é o 'Ponto de Fulgor' de um combustível?",
+        options: [
+          "A temperatura em que o material entra em combustão sem fonte externa de calor.",
+          "A temperatura em que o material começa a liberar vapores que se incendeiam se houver uma fonte externa de calor, mas as chamas não se mantêm.",
+          "A temperatura em que o material queima completamente.",
+          "A temperatura máxima que o material pode atingir."
+        ],
+        correct: 1,
+        explanation: "Ponto de Fulgor é a temperatura mínima na qual um combustível libera vapores em quantidade suficiente para formar uma mistura inflamável com o ar, mas que não se mantém em combustão. (BOAS PRÁTICAS DE LABORATÓRIO_2025.pdf, pág. 13)",
+        image: "img/ponto_fulgor.png" // Gráfico ou imagem ilustrativa de ponto de fulgor
+      },
+      {
+        q: "Qual a forma de propagação do fogo que ocorre quando o calor é transmitido através de uma massa de ar aquecida de um ambiente para outro?",
+        options: [
+          "Condução.",
+          "Convecção.",
+          "Irradiação.",
+          "Reação em cadeia."
+        ],
+        correct: 1,
+        explanation: "A convecção é a transmissão de calor por meio de fluidos (gases ou líquidos) aquecidos. (BOAS PRÁTICAS DE LABORATÓRIO_2025.pdf, pág. 12)",
+        image: "img/propagacao_conveccao.png" // Imagem ilustrando convecção
+      }
+    ]
+  }
+];
+
+
+  let currentMissionIndex = 0;
+  let currentQuestionIndex = 0;
+  let score = 0;
+
+  const characterImg = document.getElementById('character-img');
+  const missionTitle = document.getElementById('mission-title');
+  const questionEl = document.getElementById('question');
+  const imageQuestion = document.getElementById('image-question');
+  const answersEl = document.getElementById('answers');
+  const feedbackEl = document.getElementById('feedback');
+  const startBtn = document.getElementById('start-btn');
+  const nextBtn = document.getElementById('next-btn');
+  const scoreEl = document.getElementById('score');
+
+  startBtn.addEventListener('click', startGame);
+  nextBtn.addEventListener('click', () => {
+    // avançar para a próxima pergunta
+    currentQuestionIndex++;
+    setNextQuestion();
+  });
+
+  // fallback para caso a imagem do personagem não carregue
+  characterImg.addEventListener('error', () => {
+    // se imagem não carregar, use uma imagem genérica pública (ou deixe em branco)
+    characterImg.src = 'https://i.imgur.com/placeholder.png'; // substitua por uma URL válida ou deixe vazio
+    characterImg.alt = 'Personagem (imagem indisponível)';
+  });
+
+  function startGame() {
+    score = 0;
+    currentMissionIndex = 0;
+    currentQuestionIndex = 0;
+    startBtn.style.display = 'none';
+    scoreEl.textContent = '';
+    setNextQuestion();
+  }
+
+  function setNextQuestion() {
+    resetState();
+
+    if (currentMissionIndex >= missions.length) {
+      showScore();
+      return;
+    }
+
+    const mission = missions[currentMissionIndex];
+
+    // se a missão não tiver perguntas, pula para a próxima
+    if (!mission.questions || mission.questions.length === 0) {
+      currentMissionIndex++;
+      currentQuestionIndex = 0;
+      setNextQuestion();
+      return;
+    }
+
+    missionTitle.textContent = `Missão ${mission.id}: ${mission.title}`;
+
+    // Definir imagem do personagem; se não existir, usar fallback
+    if (mission.character && mission.character.length) {
+      characterImg.src = mission.character;
+      characterImg.alt = `Personagem da missão ${mission.title}`;
+    } else {
+      characterImg.src = ''; // vazio ou uma imagem padrão
+      characterImg.alt = '';
+    }
+
+    // Se terminar as perguntas dessa missão, avisar e partir para a próxima
+    if (currentQuestionIndex >= mission.questions.length) {
+      alert(`Missão "${mission.title}" concluída!`);
+      currentMissionIndex++;
+      currentQuestionIndex = 0;
+      setNextQuestion();
+      return;
+    }
+
+    showQuestion(mission.questions[currentQuestionIndex]);
+  }
+
+  function showQuestion(questionObj) {
+    questionEl.textContent = questionObj.q;
+
+    if (questionObj.image) {
+      imageQuestion.src = questionObj.image;
+      imageQuestion.style.display = 'block';
+      imageQuestion.alt = 'Imagem da pergunta';
+    } else {
+      imageQuestion.style.display = 'none';
+      imageQuestion.src = '';
+      imageQuestion.alt = '';
+    }
+
+    // criar botões de opção
+    questionObj.options.forEach((option, index) => {
+      const button = document.createElement('button');
+      button.textContent = option;
+      button.classList.add('answer-btn');
+      button.addEventListener('click', () => selectAnswer(index, questionObj));
+      answersEl.appendChild(button);
+    });
+
+    // ocultar o botão Próxima até que o usuário responda
+    nextBtn.style.display = 'none';
+  }
+
+  function resetState() {
+    nextBtn.style.display = 'none';
+    feedbackEl.textContent = '';
+    feedbackEl.className = 'feedback-message hidden';
+    while (answersEl.firstChild) {
+      answersEl.removeChild(answersEl.firstChild);
+    }
+  }
+
+  function selectAnswer(selectedIndex, questionObj) {
+    const buttons = answersEl.querySelectorAll('button');
+    buttons.forEach((btn, idx) => {
+      btn.disabled = true;
+      if (idx === questionObj.correct) {
+        btn.classList.add('correct');
+      }
+      if (idx === selectedIndex && idx !== questionObj.correct) {
+        btn.classList.add('wrong');
+      }
+    });
+
+    if (selectedIndex === questionObj.correct) {
+      score += 10;
+      feedbackEl.textContent = 'Correto! ' + questionObj.explanation;
+      feedbackEl.className = 'feedback-message feedback-correct';
+    } else {
+      feedbackEl.textContent = 'Errado! ' + questionObj.explanation;
+      feedbackEl.className = 'feedback-message feedback-wrong';
+    }
+
+    scoreEl.textContent = `Pontuação: ${score}`;
+
+    // mostrar botão próxima
+    nextBtn.style.display = 'inline-block';
+  }
+
+  function showScore() {
+    resetState();
+    characterImg.src = '';
+    missionTitle.textContent = '';
+    questionEl.textContent = `Parabéns! Você completou todas as missões com ${score} pontos!`;
+    startBtn.textContent = 'Jogar Novamente';
+    startBtn.style.display = 'inline-block';
+    feedbackEl.textContent = '';
+    scoreEl.textContent = `Pontuação final: ${score}`;
+  }
+</script>
+
+</body>
+</html>
